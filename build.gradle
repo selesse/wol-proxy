@@ -20,12 +20,12 @@ dependencies {
 }
 
 application {
-    mainClassName = "stupid.wol.workaround.App"
+    mainClassName = "com.selesse.wol.App"
 }
 
 task fatJar(type: Jar) {
     manifest {
-        attributes 'Main-Class': 'stupid.wol.workaround.App'
+        attributes 'Main-Class': 'com.selesse.wol.App'
     }
     from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
     with jar

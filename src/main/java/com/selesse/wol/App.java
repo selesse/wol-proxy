@@ -1,4 +1,4 @@
-package stupid.wol.workaround;
+package com.selesse.wol;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
