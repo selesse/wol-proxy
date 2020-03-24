@@ -1,6 +1,7 @@
 plugins {
     id 'java'
     id 'application'
+    id 'org.hidetake.ssh' version '2.10.1'
 }
 
 sourceCompatibility = 1.8
@@ -27,8 +28,45 @@ task fatJar(type: Jar) {
     manifest {
         attributes 'Main-Class': 'com.selesse.wol.App'
     }
+    archiveFileName = 'wol.jar'
     from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
     with jar
 }
 
+remotes {
+    raspberryPi {
+        host = 'raspberrypi.local'
+        user = 'pi'
+        identity = file(System.getProperty("user.home") + "/.ssh/id_rsa")
+    }
+    raspberryPi2 {
+        host = 'raspberrypi2.local'
+        user = 'pi'
+        identity = file(System.getProperty("user.home") + "/.ssh/id_rsa")
+    }
+    apf {
+        host = 'example.com'
+        user = 'alex'
+        identity = file(System.getProperty("user.home") + "/.ssh/id_rsa")
+    }
+}
+
+task deploy {
+    doLast {
+        ssh.run {
+            session(remotes.apf) {
+                put from: fatJar.outputs.files.singleFile, into: 'wol'
+                executeScript file('bin/kill-existing-server')
+                execute 'cd wol && nohup java -jar wol.jar &> wol.txt &'
+            }
+            session(remotes.raspberryPi) {
+                put from: fatJar.outputs.files.singleFile, into: 'wol'
+                executeScript file('bin/kill-existing-server')
+                execute 'cd wol && nohup java -jar wol.jar &> wol.txt &'
+            }
+        }
+    }
+}
+
 assemble.dependsOn fatJar
+deploy.dependsOn fatJar
