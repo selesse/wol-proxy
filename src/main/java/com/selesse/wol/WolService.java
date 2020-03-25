@@ -6,16 +6,16 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.*;
-import java.nio.ByteBuffer;
-import java.nio.channels.DatagramChannel;
+import java.util.Objects;
 
 public class WolService {
     private static Logger LOGGER = LoggerFactory.getLogger(WolService.class);
-    private static InetAddress BROADCAST_ADDRESS;
+    private static final int WOL_PORT = 9;
+    private static InetAddress DEFAULT_BROADCAST_ADDRESS;
 
     static {
         try {
-            BROADCAST_ADDRESS = InetAddress.getByName("255.255.255.255");
+            DEFAULT_BROADCAST_ADDRESS = InetAddress.getByName("255.255.255.255");
         } catch (UnknownHostException e) {
             throw new RuntimeException("Could not find broadcast address");
         }
@@ -27,17 +27,32 @@ public class WolService {
         this.wolPacket = wolPacket;
     }
 
-    public void send(String interfaceName) {
+    public void sendWakeOnLan(NetworkInterface networkInterface) {
         try {
-            NetworkInterface networkInterface = NetworkInterface.getByName(interfaceName);
-            DatagramChannel datagramChannel = DatagramChannel.open();
-            datagramChannel.bind(null);
-            datagramChannel.socket().setBroadcast(true);
-            datagramChannel.setOption(StandardSocketOptions.IP_MULTICAST_IF, networkInterface);
-            datagramChannel.send(ByteBuffer.wrap(wolPacket.packetContents()), new InetSocketAddress(BROADCAST_ADDRESS, 9));
+            DatagramPacket datagramPacket = new DatagramPacket(
+                    wolPacket.packetContents(),
+                    wolPacket.packetContents().length
+            );
+            MulticastSocket multicastSocket = new MulticastSocket();
+            multicastSocket.setBroadcast(true);
+            InetAddress broadcastAddress = getDefaultBroadcastAddress(networkInterface);
+            LOGGER.info("Sending WoL packet to interface {} with broadcast address {}",
+                    networkInterface.getDisplayName(),
+                    broadcastAddress.getHostAddress());
+            datagramPacket.setAddress(broadcastAddress);
+            datagramPacket.setPort(WOL_PORT);
+            multicastSocket.send(datagramPacket);
         } catch (IOException e) {
             LOGGER.info("Error while sending packet", e);
             throw new RuntimeException(e);
         }
+    }
+
+    private static InetAddress getDefaultBroadcastAddress(NetworkInterface networkInterface) {
+        return networkInterface.getInterfaceAddresses().stream()
+                        .map(InterfaceAddress::getBroadcast)
+                        .filter(Objects::nonNull)
+                        .findFirst()
+                        .orElse(DEFAULT_BROADCAST_ADDRESS);
     }
 }

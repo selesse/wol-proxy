@@ -1,9 +1,5 @@
 package com.selesse.wol.packet;
 
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-
 public class WolPacket {
     private final String macAddress;
 
