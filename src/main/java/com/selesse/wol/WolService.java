@@ -6,6 +6,8 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.*;
+import java.nio.ByteBuffer;
+import java.nio.channels.DatagramChannel;
 
 public class WolService {
     private static Logger LOGGER = LoggerFactory.getLogger(WolService.class);
@@ -27,17 +29,12 @@ public class WolService {
 
     public void send(String interfaceName) {
         try {
-            int port = 9;
-            DatagramPacket datagramPacket = new DatagramPacket(
-                    wolPacket.packetContents(),
-                    wolPacket.packetContents().length,
-                    BROADCAST_ADDRESS,
-                    port
-            );
             NetworkInterface networkInterface = NetworkInterface.getByName(interfaceName);
-            MulticastSocket multicastSocket = new MulticastSocket(0);
-            multicastSocket.setNetworkInterface(networkInterface);
-            multicastSocket.send(datagramPacket);
+            DatagramChannel datagramChannel = DatagramChannel.open();
+            datagramChannel.bind(null);
+            datagramChannel.socket().setBroadcast(true);
+            datagramChannel.setOption(StandardSocketOptions.IP_MULTICAST_IF, networkInterface);
+            datagramChannel.send(ByteBuffer.wrap(wolPacket.packetContents()), new InetSocketAddress(BROADCAST_ADDRESS, 9));
         } catch (IOException e) {
             LOGGER.info("Error while sending packet", e);
             throw new RuntimeException(e);
