@@ -12,22 +12,30 @@ public class App {
     private static Logger LOGGER = LoggerFactory.getLogger(App.class);
 
     public static void main(String[] args) {
-        Spark.port(8080);
-        Spark.get("/wol", (req, res) -> {
-            String macAddress = req.queryParamOrDefault("send", null);
-            if (macAddress != null) {
-                LOGGER.info("Sending WOL packet to {}", macAddress);
-                WolPacket wolPacket = new WolPacket(macAddress);
-                WolService wolService = new WolService(wolPacket);
-                wolService.send("eth0");
-            }
-            LOGGER.info("Received request: {}", req.userAgent());
-            return "Welcome to the world of WOL";
-        });
+        if (args.length != 0) {
+            WolPacket wolPacket = new WolPacket(args[0]);
+            WolService wolService = new WolService(wolPacket);
+            wolService.send(args[1]);
+        }
+        else {
+            Spark.port(8080);
+            Spark.get("/wol", (req, res) -> {
+                String macAddress = req.queryParamOrDefault("send", null);
+                if (macAddress != null) {
+                    String networkInterface = req.queryParamOrDefault("interface", "eth0");
+                    LOGGER.info("Sending WOL packet to {} through interface {}", macAddress, networkInterface);
+                    WolPacket wolPacket = new WolPacket(macAddress);
+                    WolService wolService = new WolService(wolPacket);
+                    wolService.send(networkInterface);
+                }
+                LOGGER.info("Received request: {}", req.userAgent());
+                return "Welcome to the world of WOL";
+            });
 
-        Spark.post("/wol", (req, res) -> {
-            LOGGER.info("{}", req.body());
-            return "OK";
-        });
+            Spark.post("/wol", (req, res) -> {
+                LOGGER.info("{}", req.body());
+                return "OK";
+            });
+        }
     }
 }

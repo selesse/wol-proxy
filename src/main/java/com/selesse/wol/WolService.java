@@ -35,10 +35,9 @@ public class WolService {
                     port
             );
             NetworkInterface networkInterface = NetworkInterface.getByName(interfaceName);
-            InetAddress inetAddress = networkInterface.getInetAddresses().nextElement();
-
-            DatagramSocket datagramSocket = new DatagramSocket();
-            datagramSocket.send(datagramPacket);
+            MulticastSocket multicastSocket = new MulticastSocket(0);
+            multicastSocket.setNetworkInterface(networkInterface);
+            multicastSocket.send(datagramPacket);
         } catch (IOException e) {
             LOGGER.info("Error while sending packet", e);
             throw new RuntimeException(e);
