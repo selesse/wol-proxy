@@ -51,15 +51,27 @@ remotes {
     }
 }
 
-task deploy {
+task deployPi {
     doLast {
         ssh.run {
-            session(remotes.apf) {
+            session(remotes.raspberryPi) {
                 put from: fatJar.outputs.files.singleFile, into: 'wol'
                 executeScript file('bin/kill-existing-server')
                 execute 'cd wol && nohup java -jar wol.jar &> wol.txt &'
             }
-            session(remotes.raspberryPi) {
+            session(remotes.raspberryPi2) {
+                put from: fatJar.outputs.files.singleFile, into: 'wol'
+                executeScript file('bin/kill-existing-server')
+                execute 'cd wol && nohup java -jar wol.jar &> wol.txt &'
+            }
+        }
+    }
+}
+
+task deploy {
+    doLast {
+        ssh.run {
+            session(remotes.apf) {
                 put from: fatJar.outputs.files.singleFile, into: 'wol'
                 executeScript file('bin/kill-existing-server')
                 execute 'cd wol && nohup java -jar wol.jar &> wol.txt &'
@@ -69,4 +81,5 @@ task deploy {
 }
 
 assemble.dependsOn fatJar
-deploy.dependsOn fatJar
+deployPi.dependsOn fatJar
+deploy.dependsOn deployPi
