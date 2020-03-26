@@ -10,7 +10,7 @@ import java.io.ObjectInputStream;
 import java.net.Socket;
 
 public class Client {
-    private static final Logger logger = LoggerFactory.getLogger(Client.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(Client.class);
     private final String host;
     private final int port;
 
@@ -26,7 +26,7 @@ public class Client {
         Object o = objectInputStream.readObject();
         if (o instanceof Message) {
             String message = ((Message) o).getValue();
-            logger.info("Received {} from server", message);
+           LOGGER.info("Received {} from server", message);
         }
         // while (true) receive message
         // server sends pings every 30 minutes
@@ -35,6 +35,6 @@ public class Client {
         // thread per client
 
         Object newObject = objectInputStream.readObject();
-        logger.info("Received second object: {}", newObject);
+        LOGGER.info("Received second object: {}", newObject);
     }
 }

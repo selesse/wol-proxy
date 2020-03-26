@@ -10,7 +10,7 @@ import java.net.NetworkInterface;
 import java.util.Optional;
 
 public class WebhookProxy {
-    private static final Logger logger = LoggerFactory.getLogger(WebhookProxy.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(WebhookProxy.class);
 
     public void startProxy(int port) {
         Spark.port(port);
@@ -18,7 +18,7 @@ public class WebhookProxy {
             String macAddress = req.queryParamOrDefault("send", null);
             if (macAddress != null) {
                 String interfaceName = req.queryParamOrDefault("interface", "eth0");
-                logger.info("Sending WOL packet to {} through interface {}", macAddress, interfaceName);
+                LOGGER.info("Sending WOL packet to {} through interface {}", macAddress, interfaceName);
                 WolPacket wolPacket = new WolPacket(macAddress);
                 WolService wolService = new WolService(wolPacket);
                 NetworkInterface networkInterface =
@@ -28,12 +28,12 @@ public class WebhookProxy {
                                 );
                 wolService.sendWakeOnLan(networkInterface);
             }
-            logger.info("Received request: {}", req.userAgent());
+            LOGGER.info("Received request: {}", req.userAgent());
             return "Welcome to the world of WOL";
         });
 
         Spark.post("/wol", (req, res) -> {
-            logger.info("{}", req.body());
+            LOGGER.info("{}", req.body());
             return "OK";
         });
     }

@@ -36,9 +36,10 @@ public class WolService {
             MulticastSocket multicastSocket = new MulticastSocket();
             multicastSocket.setBroadcast(true);
             InetAddress broadcastAddress = getDefaultBroadcastAddress(networkInterface);
-            LOGGER.info("Sending WoL packet to interface {} with broadcast address {}",
+            LOGGER.info("Sending WoL packet to interface {} with broadcast address {} with MAC address {}",
                     networkInterface.getDisplayName(),
-                    broadcastAddress.getHostAddress());
+                    broadcastAddress.getHostAddress(),
+                    wolPacket.getMacAddress());
             datagramPacket.setAddress(broadcastAddress);
             datagramPacket.setPort(WOL_PORT);
             multicastSocket.send(datagramPacket);
