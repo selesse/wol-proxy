@@ -12,7 +12,7 @@ repositories {
 }
 
 dependencies {
-    compile("org.slf4j:slf4j-api:1.7.25")
+    compile("org.slf4j:slf4j-api:1.7.30")
     compile("com.sparkjava:spark-core:2.8.0")
     compile("ch.qos.logback:logback-classic:1.2.3")
     implementation("com.google.guava:guava:28.1-jre")

@@ -1,22 +1,43 @@
 package com.selesse.wol;
 
+import com.selesse.notification.client.Client;
+import com.selesse.notification.listener.Listener;
 import com.selesse.wol.packet.WolPacket;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import spark.Spark;
 
+import java.io.IOException;
 import java.net.NetworkInterface;
-import java.net.SocketException;
 import java.util.Optional;
 
 public class App {
     private static Logger LOGGER = LoggerFactory.getLogger(App.class);
 
-    public static void main(String[] args) throws SocketException {
+    public static void main(String[] args) throws IOException, ClassNotFoundException {
         if (args.length != 0) {
-            WolPacket wolPacket = new WolPacket(args[0]);
-            WolService wolService = new WolService(wolPacket);
-            wolService.sendWakeOnLan(NetworkInterface.getByName(args[1]));
+            switch (args[0]) {
+                case "--wol":
+                    WolPacket wolPacket = new WolPacket(args[1]);
+                    WolService wolService = new WolService(wolPacket);
+                    wolService.sendWakeOnLan(NetworkInterface.getByName(args[2]));
+                    break;
+                case "--client":
+                    Client client = new Client(args[1], Integer.parseInt(args[2]));
+                    client.ping();
+                    break;
+                case "--server":
+                    Thread t = new Thread(() -> {
+                        Listener listener = new Listener();
+                        try {
+                            listener.listen();
+                        } catch (IOException | InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    });
+                    t.start();
+                    break;
+            }
         }
         else {
             Spark.port(8080);
