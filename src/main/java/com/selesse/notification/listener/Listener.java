@@ -13,11 +13,9 @@ import java.util.concurrent.TimeUnit;
 
 public class Listener {
     private static final Logger logger = LoggerFactory.getLogger(Listener.class);
-    public static final int PORT = 8888;
-
-    public void listen() throws IOException, InterruptedException {
+    public void listen(int port) throws IOException, InterruptedException {
         try {
-            ServerSocket serverSocket = new ServerSocket(PORT);
+            ServerSocket serverSocket = new ServerSocket(port);
             Socket client = serverSocket.accept();
             logger.info("Found client: " + client.getRemoteSocketAddress());
             OutputStream outputStream = client.getOutputStream();
