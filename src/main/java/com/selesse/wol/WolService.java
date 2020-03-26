@@ -30,13 +30,13 @@ public class WolService {
     public void sendWakeOnLan(NetworkInterface networkInterface) {
         try {
             DatagramPacket datagramPacket = new DatagramPacket(
-                    wolPacket.packetContents(),
-                    wolPacket.packetContents().length
+                    wolPacket.getPacketContents(),
+                    wolPacket.getPacketContents().length
             );
             MulticastSocket multicastSocket = new MulticastSocket();
             multicastSocket.setBroadcast(true);
             InetAddress broadcastAddress = getDefaultBroadcastAddress(networkInterface);
-            LOGGER.info("Sending WoL packet to interface {} with broadcast address {} with MAC address {}",
+            LOGGER.info("Sending WoL packet to interface={} with broadcast address={} and MAC address={}",
                     networkInterface.getDisplayName(),
                     broadcastAddress.getHostAddress(),
                     wolPacket.getMacAddress());

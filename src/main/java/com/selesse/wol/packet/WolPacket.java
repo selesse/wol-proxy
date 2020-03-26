@@ -7,7 +7,11 @@ public class WolPacket {
         this.macAddress = macAddress;
     }
 
-    public byte[] packetContents() {
+    public String getMacAddress() {
+        return macAddress;
+    }
+
+    public byte[] getPacketContents() {
         byte[] macBytes = getMacBytes(macAddress);
         byte[] bytes = new byte[6 + 16 * macBytes.length];
         for (int i = 0; i < 6; i++) {
