@@ -1,12 +1,12 @@
 package com.selesse.notification.listener;
 
-import com.google.common.collect.Lists;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -16,7 +16,7 @@ public class Listener {
     private List<ClientHandler> clientHandlers;
 
     public Listener() {
-        this.clientHandlers = Lists.newArrayList();
+        this.clientHandlers = new ArrayList<>();
     }
 
     public void listen(int port) {
@@ -34,5 +34,9 @@ public class Listener {
         } catch (IOException e) {
             LOGGER.error("Error trying to thread things", e);
         }
+    }
+
+    public void onRequestReceived() {
+        clientHandlers.forEach(ClientHandler::sendWolMessage);
     }
 }

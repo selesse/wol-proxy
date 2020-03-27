@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class App {
     private static final Logger LOGGER = LoggerFactory.getLogger(App.class);
@@ -29,11 +30,9 @@ public class App {
                 break;
             case "--server":
                 int serverPort = Optional.ofNullable(args[1]).map(Integer::valueOf).orElse(8888);
-                startServer(serverPort);
-                break;
-            case "--proxy":
-                int proxyPort = Optional.ofNullable(args[1]).map(Integer::valueOf).orElse(8080);
-                startProxy(proxyPort);
+                Listener listener = startServer(serverPort);
+                int proxyPort = Optional.ofNullable(args[2]).map(Integer::valueOf).orElse(8080);
+                startProxy(proxyPort, listener);
                 break;
         }
     }
@@ -49,17 +48,19 @@ public class App {
         client.ping();
     }
 
-    private static void startServer(int port) {
+    private static Listener startServer(int port) {
+        AtomicReference<Listener> listener = new AtomicReference<>();
         Thread t = new Thread(() -> {
-            Listener listener = new Listener();
-            listener.listen(port);
+            listener.set(new Listener());
+            listener.get().listen(port);
         });
         t.start();
         LOGGER.info("Started listener service on port {}", port);
+        return listener.get();
     }
 
-    private static void startProxy(int port) {
+    private static void startProxy(int port, Listener listener) {
         WebhookProxy webhookProxy = new WebhookProxy();
-        webhookProxy.startProxy(port);
+        webhookProxy.startProxy(port, listener);
     }
 }
