@@ -1,6 +1,7 @@
 package com.selesse.notification.client;
 
 import com.selesse.notification.Message;
+import com.selesse.wol.DesktopWakeOnLanService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,6 +30,10 @@ public class Client {
             if (o instanceof Message) {
                 String message = ((Message) o).getValue();
                 LOGGER.info("Received message={} from server", message);
+
+                if (message.equals("wol")) {
+                    new DesktopWakeOnLanService().sendWakeOnLan();
+                }
             }
         }
     }
