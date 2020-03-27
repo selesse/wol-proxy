@@ -44,7 +44,7 @@ remotes {
         user = 'pi'
         identity = file(System.getProperty("user.home") + "/.ssh/id_rsa")
     }
-    apf {
+    proxyServer {
         host = 'example.com'
         user = 'alex'
         identity = file(System.getProperty("user.home") + "/.ssh/id_rsa")
@@ -62,24 +62,29 @@ task deployPi {
             session(remotes.raspberryPi2) {
                 put from: fatJar.outputs.files.singleFile, into: 'wol'
                 executeScript file('bin/kill-existing-server')
-                execute 'cd wol && nohup java -jar wol.jar &> wol.txt &'
+                execute "cd wol && nohup java -jar wol.jar --client ${remotes.proxyServer.host} 8888 &> wol.txt &"
+            }
+        }
+    }
+}
+
+task deployProxy {
+    doLast {
+        ssh.run {
+            session(remotes.proxyServer) {
+                put from: fatJar.outputs.files.singleFile, into: 'wol'
+                executeScript file('bin/kill-existing-server')
+                execute 'cd wol && nohup java -jar wol.jar --server 8888 8080 &> wol.txt &'
             }
         }
     }
 }
 
 task deploy {
-    doLast {
-        ssh.run {
-            session(remotes.apf) {
-                put from: fatJar.outputs.files.singleFile, into: 'wol'
-                executeScript file('bin/kill-existing-server')
-                execute 'cd wol && nohup java -jar wol.jar &> wol.txt &'
-            }
-        }
-    }
+
 }
 
 assemble.dependsOn fatJar
-deployPi.dependsOn fatJar
+deployProxy.dependsOn fatJar
+deployPi.dependsOn deployProxy
 deploy.dependsOn deployPi
