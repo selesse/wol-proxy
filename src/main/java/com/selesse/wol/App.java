@@ -4,6 +4,8 @@ import com.selesse.notification.client.Client;
 import com.selesse.notification.listener.Listener;
 import com.selesse.proxy.WebhookProxy;
 import com.selesse.wol.packet.WolPacket;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.NetworkInterface;
@@ -11,6 +13,8 @@ import java.net.SocketException;
 import java.util.Optional;
 
 public class App {
+    private static final Logger LOGGER = LoggerFactory.getLogger(App.class);
+
     public static void main(String[] args) throws IOException, ClassNotFoundException {
         switch (args[0]) {
             case "--wol":
@@ -48,13 +52,10 @@ public class App {
     private static void startServer(int port) {
         Thread t = new Thread(() -> {
             Listener listener = new Listener();
-            try {
-                listener.listen(port);
-            } catch (IOException | InterruptedException e) {
-                e.printStackTrace();
-            }
+            listener.listen(port);
         });
         t.start();
+        LOGGER.info("Started listener service on port {}", port);
     }
 
     private static void startProxy(int port) {

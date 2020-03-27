@@ -1,35 +1,29 @@
 package com.selesse.notification.listener;
 
-import com.selesse.notification.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.io.ObjectOutputStream;
-import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class Listener {
     private static final Logger LOGGER = LoggerFactory.getLogger(Listener.class);
 
-    public void listen(int port) throws IOException, InterruptedException {
+    public void listen(int port) {
+        ExecutorService executorService = Executors.newFixedThreadPool(8);
+
         try {
             ServerSocket serverSocket = new ServerSocket(port);
-            Socket client = serverSocket.accept();
-            LOGGER.info("Found client: " + client.getRemoteSocketAddress());
-            OutputStream outputStream = client.getOutputStream();
-            ObjectOutputStream objectOutputStream = new ObjectOutputStream(outputStream);
-            objectOutputStream.writeObject(new Message("hello"));
-            objectOutputStream.flush();
-
-            TimeUnit.MINUTES.sleep(5);
-
-            objectOutputStream.writeObject(new Message("hello"));
-            objectOutputStream.flush();
-        } catch (IOException | InterruptedException e) {
-            throw e;
+            while (true) {
+                Socket client = serverSocket.accept();
+                LOGGER.info("Starting new thread");
+                executorService.execute(new ClientHandler(client));
+            }
+        } catch (IOException e) {
+            LOGGER.error("Error trying to thread things", e);
         }
     }
 }
