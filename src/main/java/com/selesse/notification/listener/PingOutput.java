@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.net.SocketException;
 
 public class PingOutput implements Runnable {
     private static final Logger LOGGER = LoggerFactory.getLogger(PingOutput.class);
@@ -26,9 +27,14 @@ public class PingOutput implements Runnable {
             objectOutputStream.writeObject(new Message("ping"));
             objectOutputStream.flush();
             outputStream.release();
+        } catch (SocketException e) {
+            LOGGER.info("Socket error: {}", e.getMessage());
+            outputStream.release();
+            throw new SocketNeedsCancelationException(e);
         } catch (IOException e) {
             LOGGER.info("Interrupted while trying to ping", e);
             outputStream.release();
+            throw new RuntimeException(e);
         }
     }
 }

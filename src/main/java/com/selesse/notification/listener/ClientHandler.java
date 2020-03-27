@@ -7,31 +7,58 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.net.SocketAddress;
+import java.util.concurrent.*;
 
 public class ClientHandler implements Runnable {
     private static final Logger LOGGER = LoggerFactory.getLogger(ClientHandler.class);
     private final Socket client;
     private final ScheduledExecutorService executorService;
     private ClientOutputStream clientOutputStream;
+    private SocketAddress remoteSocketAddress;
+    private boolean isAlive;
 
     public ClientHandler(Socket client) {
         this.client = client;
-        this.executorService = Executors.newScheduledThreadPool(1);
+        this.remoteSocketAddress = client.getRemoteSocketAddress();
+        this.executorService = Executors.newScheduledThreadPool(2);
+        this.isAlive = true;
+    }
+
+    public boolean isAlive() {
+        return isAlive;
     }
 
     @Override
     public void run() {
         try {
-            LOGGER.info("Handling incoming client {}", client.getRemoteSocketAddress());
+            LOGGER.info("Handling incoming client {}", remoteSocketAddress);
             this.clientOutputStream = new ClientOutputStream(client.getOutputStream());
 
             PingOutput pingOutput = new PingOutput(client, clientOutputStream);
-            executorService.scheduleAtFixedRate(pingOutput, 0, 3, TimeUnit.MINUTES);
+            ScheduledFuture<?> scheduledFuture =
+                    executorService.scheduleAtFixedRate(pingOutput, 0, 3, TimeUnit.MINUTES);
+            Runnable r = () -> {
+                try {
+                    scheduledFuture.get();
+                } catch (InterruptedException e) {
+                    LOGGER.error("Scheduled execution was interrupted", e);
+                } catch (CancellationException e) {
+                    LOGGER.warn("Watcher thread has been cancelled", e);
+                } catch (ExecutionException e) {
+                    if (e.getCause() instanceof SocketNeedsCancelationException) {
+                        LOGGER.info("Socket closed, shutting down for client {}", remoteSocketAddress);
+                    } else {
+                        LOGGER.error("Uncaught exception in scheduled execution, aborting thread for client {}",
+                                remoteSocketAddress, e);
+                    }
+                    scheduledFuture.cancel(true);
+                    this.isAlive = false;
+                }
+            };
+            executorService.execute(r);
         } catch (IOException e) {
-            LOGGER.info("Error trying to send ping", e);
+            LOGGER.error("Error obtaining OutputStream", e);
         }
     }
 
@@ -46,5 +73,4 @@ public class ClientHandler implements Runnable {
             clientOutputStream.release();
         }
     }
-
 }

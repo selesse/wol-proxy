@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
 public class Listener {
     private static final Logger LOGGER = LoggerFactory.getLogger(Listener.class);
@@ -37,6 +38,11 @@ public class Listener {
     }
 
     public void onRequestReceived() {
-        clientHandlers.forEach(ClientHandler::sendWolMessage);
+        clientHandlers.forEach(clientHandler -> {
+            if (clientHandler.isAlive()) {
+                clientHandler.sendWolMessage();
+            }
+        });
+        clientHandlers = clientHandlers.stream().filter(ClientHandler::isAlive).collect(Collectors.toList());
     }
 }
