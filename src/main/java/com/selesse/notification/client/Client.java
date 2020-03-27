@@ -22,19 +22,14 @@ public class Client {
     public void ping() throws IOException, ClassNotFoundException {
         Socket socket = new Socket(host, port);
         InputStream inputStream = socket.getInputStream();
-        ObjectInputStream objectInputStream = new ObjectInputStream(inputStream);
-        Object o = objectInputStream.readObject();
-        if (o instanceof Message) {
-            String message = ((Message) o).getValue();
-           LOGGER.info("Received {} from server", message);
-        }
-        // while (true) receive message
-        // server sends pings every 30 minutes
-        // client resilient to this
-        // add logging
-        // thread per client
 
-        Object newObject = objectInputStream.readObject();
-        LOGGER.info("Received second object: {}", newObject);
+        while (true) {
+            ObjectInputStream objectInputStream = new ObjectInputStream(inputStream);
+            Object o = objectInputStream.readObject();
+            if (o instanceof Message) {
+                String message = ((Message) o).getValue();
+                LOGGER.info("Received message={} from server", message);
+            }
+        }
     }
 }
