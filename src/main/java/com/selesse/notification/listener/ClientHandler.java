@@ -28,8 +28,8 @@ public class ClientHandler implements Runnable {
             LOGGER.info("Handling incoming client {}", client.getRemoteSocketAddress());
             this.clientOutputStream = new ClientOutputStream(client.getOutputStream());
 
-            PingOutput pingOutput = new PingOutput(clientOutputStream);
-            executorService.scheduleAtFixedRate(pingOutput, 0, 1, TimeUnit.MINUTES);
+            PingOutput pingOutput = new PingOutput(client, clientOutputStream);
+            executorService.scheduleAtFixedRate(pingOutput, 0, 3, TimeUnit.MINUTES);
         } catch (IOException e) {
             LOGGER.info("Error trying to send ping", e);
         }

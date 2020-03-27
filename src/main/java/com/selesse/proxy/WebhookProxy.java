@@ -10,14 +10,18 @@ public class WebhookProxy {
 
     public void startProxy(int port, Listener listener) {
         Spark.port(port);
+        Spark.ipAddress("127.0.0.1");
         Spark.get("/wol", (req, res) -> {
             listener.onRequestReceived();
             return "Welcome to the world of WOL";
         });
 
         Spark.post("/wol", (req, res) -> {
-            LOGGER.info("{}", req.body());
-            listener.onRequestReceived();
+            LOGGER.info("Received post request for WoL");
+            LOGGER.info("Body: {}, IP: {}", req.body(), req.ip());
+            if (req.body().contains("'turn_on':'true'")) {
+                listener.onRequestReceived();
+            }
             return "OK";
         });
     }
