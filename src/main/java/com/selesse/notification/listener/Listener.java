@@ -38,11 +38,9 @@ public class Listener {
     }
 
     public void onRequestReceived() {
-        clientHandlers.forEach(clientHandler -> {
-            if (clientHandler.isAlive()) {
-                clientHandler.sendWolMessage();
-            }
-        });
+        clientHandlers.stream()
+                .filter(ClientHandler::isAlive)
+                .forEach(ClientHandler::sendWolMessage);
         clientHandlers = clientHandlers.stream().filter(ClientHandler::isAlive).collect(Collectors.toList());
     }
 }

@@ -11,7 +11,6 @@ import java.io.IOException;
 import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicReference;
 
 public class App {
     private static final Logger LOGGER = LoggerFactory.getLogger(App.class);
@@ -49,14 +48,13 @@ public class App {
     }
 
     private static Listener startServer(int port) {
-        AtomicReference<Listener> listener = new AtomicReference<>();
+        Listener listener = new Listener();
         Thread t = new Thread(() -> {
-            listener.set(new Listener());
-            listener.get().listen(port);
+            listener.listen(port);
         });
         t.start();
         LOGGER.info("Started listener service on port {}", port);
-        return listener.get();
+        return listener;
     }
 
     private static void startProxy(int port, Listener listener) {
