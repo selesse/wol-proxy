@@ -14,8 +14,8 @@ public class ClientHandler implements Runnable {
     private static final Logger LOGGER = LoggerFactory.getLogger(ClientHandler.class);
     private final Socket client;
     private final ScheduledExecutorService executorService;
-    private ClientOutputStream clientOutputStream;
-    private SocketAddress remoteSocketAddress;
+    private final SocketAddress remoteSocketAddress;
+    private final ClientOutputStream clientOutputStream;
     private boolean isAlive;
 
     public ClientHandler(Socket client) {
@@ -23,6 +23,11 @@ public class ClientHandler implements Runnable {
         this.remoteSocketAddress = client.getRemoteSocketAddress();
         this.executorService = Executors.newScheduledThreadPool(2);
         this.isAlive = true;
+        try {
+            this.clientOutputStream = new ClientOutputStream(client.getOutputStream());
+        } catch (IOException e) {
+            throw new RuntimeException("Unable to obtain client's output stream");
+        }
     }
 
     public boolean isAlive() {
@@ -31,35 +36,30 @@ public class ClientHandler implements Runnable {
 
     @Override
     public void run() {
-        try {
-            LOGGER.info("Handling incoming client {}", remoteSocketAddress);
-            this.clientOutputStream = new ClientOutputStream(client.getOutputStream());
+        LOGGER.info("Handling incoming client {}", remoteSocketAddress);
 
-            PingOutput pingOutput = new PingOutput(client, clientOutputStream);
-            ScheduledFuture<?> scheduledFuture =
-                    executorService.scheduleAtFixedRate(pingOutput, 0, 3, TimeUnit.MINUTES);
-            Runnable r = () -> {
-                try {
-                    scheduledFuture.get();
-                } catch (InterruptedException e) {
-                    LOGGER.error("Scheduled execution was interrupted", e);
-                } catch (CancellationException e) {
-                    LOGGER.warn("Watcher thread has been cancelled", e);
-                } catch (ExecutionException e) {
-                    if (e.getCause() instanceof SocketNeedsCancelationException) {
-                        LOGGER.info("Socket closed, shutting down for client {}", remoteSocketAddress);
-                    } else {
-                        LOGGER.error("Uncaught exception in scheduled execution, aborting thread for client {}",
-                                remoteSocketAddress, e);
-                    }
-                    scheduledFuture.cancel(true);
-                    this.isAlive = false;
+        PingOutput pingOutput = new PingOutput(client, clientOutputStream);
+        ScheduledFuture<?> scheduledFuture =
+                executorService.scheduleAtFixedRate(pingOutput, 0, 3, TimeUnit.MINUTES);
+        Runnable exceptionAwareScheduledFuture = () -> {
+            try {
+                scheduledFuture.get();
+            } catch (InterruptedException e) {
+                LOGGER.error("Scheduled execution was interrupted", e);
+            } catch (CancellationException e) {
+                LOGGER.warn("Watcher thread has been cancelled", e);
+            } catch (ExecutionException e) {
+                if (e.getCause() instanceof SocketNeedsCancelationException) {
+                    LOGGER.info("Socket closed, shutting down for client {}", remoteSocketAddress);
+                } else {
+                    LOGGER.error("Uncaught exception in scheduled execution, aborting thread for client {}",
+                            remoteSocketAddress, e);
                 }
-            };
-            executorService.execute(r);
-        } catch (IOException e) {
-            LOGGER.error("Error obtaining OutputStream", e);
-        }
+                scheduledFuture.cancel(true);
+                this.isAlive = false;
+            }
+        };
+        executorService.execute(exceptionAwareScheduledFuture);
     }
 
     public void sendWolMessage() {

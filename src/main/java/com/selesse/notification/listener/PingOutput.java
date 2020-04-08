@@ -12,7 +12,7 @@ import java.net.SocketException;
 public class PingOutput implements Runnable {
     private static final Logger LOGGER = LoggerFactory.getLogger(PingOutput.class);
     private final Socket client;
-    private ClientOutputStream outputStream;
+    private final ClientOutputStream outputStream;
 
     public PingOutput(Socket client, ClientOutputStream outputStream) {
         this.client = client;

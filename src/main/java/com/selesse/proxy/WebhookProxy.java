@@ -7,11 +7,12 @@ import spark.Spark;
 
 public class WebhookProxy {
     private static final Logger LOGGER = LoggerFactory.getLogger(WebhookProxy.class);
+    private static final String DEFAULT_MESSAGE = "Welcome to the world of WoL";
 
     public void startProxy(int port, Listener listener) {
         Spark.port(port);
         Spark.ipAddress("127.0.0.1");
-        Spark.get("/wol", (req, res) -> "Welcome to the world of WOL");
+        Spark.get("/wol", (req, res) -> DEFAULT_MESSAGE);
 
         Spark.post("/wol", (req, res) -> {
             LOGGER.info("Received post request for WoL");
@@ -19,7 +20,7 @@ public class WebhookProxy {
             if (req.body().contains("'turn_on':'true'")) {
                 listener.onRequestReceived();
             }
-            return "OK";
+            return DEFAULT_MESSAGE;
         });
     }
 }
