@@ -33,5 +33,4 @@ if it hasn't received a ping in a few cycles.
 
 ## TODO
 
-- [ ] Add an easier way to daemonize the processes
 - [ ] Fix up the CLI options

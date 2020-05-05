@@ -54,15 +54,9 @@ remotes {
 task deployPi {
     doLast {
         ssh.run {
-            session(remotes.raspberryPi) {
-                put from: fatJar.outputs.files.singleFile, into: 'wol'
-                executeScript file('bin/kill-existing-server')
-                execute 'cd wol && nohup java -jar wol.jar &> wol.txt &'
-            }
             session(remotes.raspberryPi2) {
-                put from: fatJar.outputs.files.singleFile, into: 'wol'
-                executeScript file('bin/kill-existing-server')
-                execute "cd wol && nohup java -jar wol.jar --client ${remotes.proxyServer.host} 8888 &> wol.txt &"
+                put from: fatJar.outputs.files.singleFile, into: '/opt/wol-proxy/'
+                execute "sudo /bin/systemctl restart wol-proxy-client"
             }
         }
     }
@@ -72,9 +66,8 @@ task deployProxy {
     doLast {
         ssh.run {
             session(remotes.proxyServer) {
-                put from: fatJar.outputs.files.singleFile, into: 'wol'
-                executeScript file('bin/kill-existing-server')
-                execute 'cd wol && nohup java -jar wol.jar --server 8888 8080 &> wol.txt &'
+                put from: fatJar.outputs.files.singleFile, into: '/opt/wol-proxy/'
+                execute "sudo /bin/systemctl restart wol-proxy"
             }
         }
     }

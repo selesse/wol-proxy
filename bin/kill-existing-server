@@ -1,6 +1,0 @@
-#!/bin/bash
-
-wol_pid=$(ps aux | grep -v "grep" | grep "wol.jar" | awk '{ print $2; }')
-if [[ ! -z $wol_pid ]] ; then
-  kill $wol_pid
-fi
