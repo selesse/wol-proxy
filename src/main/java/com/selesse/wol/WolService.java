@@ -9,9 +9,9 @@ import java.net.*;
 import java.util.Objects;
 
 public class WolService {
-    private static Logger LOGGER = LoggerFactory.getLogger(WolService.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(WolService.class);
     private static final int WOL_PORT = 9;
-    private static InetAddress DEFAULT_BROADCAST_ADDRESS;
+    private static final InetAddress DEFAULT_BROADCAST_ADDRESS;
 
     static {
         try {
@@ -21,7 +21,7 @@ public class WolService {
         }
     }
 
-    private WolPacket wolPacket;
+    private final WolPacket wolPacket;
 
     public WolService(WolPacket wolPacket) {
         this.wolPacket = wolPacket;

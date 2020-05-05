@@ -1,6 +1,5 @@
 package com.selesse.notification.listener;
 
-import com.selesse.notification.client.Client;
 import org.junit.Test;
 
 import java.util.concurrent.Executors;
