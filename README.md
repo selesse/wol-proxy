@@ -33,6 +33,5 @@ if it hasn't received a ping in a few cycles.
 
 ## TODO
 
-- [ ] Setup autoreconnect on the clients
 - [ ] Add an easier way to daemonize the processes
 - [ ] Fix up the CLI options

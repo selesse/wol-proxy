@@ -1,40 +1,50 @@
 package com.selesse.notification.client;
 
-import com.selesse.notification.Message;
-import com.selesse.wol.DesktopWakeOnLanService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.ObjectInputStream;
-import java.net.Socket;
+import java.util.concurrent.*;
 
 public class Client {
     private static final Logger LOGGER = LoggerFactory.getLogger(Client.class);
-    private final String host;
-    private final int port;
+    private final SocketConnector socketConnector;
+    private ScheduledExecutorService executorService;
 
-    public Client (String host, int port) {
-        this.host = host;
-        this.port = port;
+    public Client(String host, int port) {
+        this.socketConnector = new SocketConnector(host, port);
+        this.executorService = Executors.newScheduledThreadPool(2);
     }
 
-    public void ping() throws IOException, ClassNotFoundException {
-        Socket socket = new Socket(host, port);
-        InputStream inputStream = socket.getInputStream();
+    public void ping() {
+        PingThread pingThread = new PingThread(socketConnector, executorService);
+        pingThread.start();
 
-        while (true) {
-            ObjectInputStream objectInputStream = new ObjectInputStream(inputStream);
-            Object o = objectInputStream.readObject();
-            if (o instanceof Message) {
-                String message = ((Message) o).getValue();
-                LOGGER.info("Received message={} from server", message);
-
-                if (message.equals("wol")) {
-                    new DesktopWakeOnLanService().sendWakeOnLan();
+        ScheduledFuture<?> scheduledFuture =
+                executorService.scheduleAtFixedRate(new HeartbeatThread(pingThread), 0, 5, TimeUnit.MINUTES);
+        Runnable exceptionAwareScheduledFuture = () -> {
+            try {
+                scheduledFuture.get();
+            } catch (InterruptedException e) {
+                LOGGER.error("Scheduled execution was interrupted", e);
+            } catch (CancellationException e) {
+                LOGGER.warn("Heartbeat has been cancelled", e);
+            } catch (ExecutionException e) {
+                if (e.getCause() instanceof ClientRuntimeException) {
+                    LOGGER.error("Client experienced a runtime exception, restarting ping thread", e.getCause().getCause());
+                    restartPingThread();
+                } else {
+                    LOGGER.error("Uncaught exception in scheduled execution, canceling heartbeat", e);
+                    scheduledFuture.cancel(true);
                 }
             }
-        }
+        };
+        executorService.execute(exceptionAwareScheduledFuture);
+    }
+
+    private void restartPingThread() {
+        executorService.shutdown();
+        executorService = Executors.newScheduledThreadPool(2);
+        ping();
     }
 }
+

@@ -15,7 +15,7 @@ import java.util.Optional;
 public class App {
     private static final Logger LOGGER = LoggerFactory.getLogger(App.class);
 
-    public static void main(String[] args) throws IOException, ClassNotFoundException {
+    public static void main(String[] args) throws IOException {
         switch (args[0]) {
             case "--wol":
                 String macAddress = args[1];
@@ -42,7 +42,7 @@ public class App {
         wolService.sendWakeOnLan(NetworkInterface.getByName(networkInterfaceName));
     }
 
-    private static void pingClient(String host, int port) throws IOException, ClassNotFoundException {
+    private static void pingClient(String host, int port) {
         Client client = new Client(host, port);
         client.ping();
     }
