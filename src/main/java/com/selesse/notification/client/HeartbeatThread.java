@@ -22,6 +22,8 @@ public class HeartbeatThread implements Runnable {
             LOGGER.info("Last heartbeat was at {} - reconnecting", lastHeartbeat);
             pingThread.interrupt();
             pingThread.start();
+        } else {
+            LOGGER.debug("Ticking the heartbeat thread, last ping was at {}", lastHeartbeat);
         }
     }
 }

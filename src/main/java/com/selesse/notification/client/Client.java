@@ -7,43 +7,33 @@ import java.util.concurrent.*;
 
 public class Client {
     private static final Logger LOGGER = LoggerFactory.getLogger(Client.class);
+    private final int THREAD_POOL_SIZE = 2;
     private final SocketConnector socketConnector;
     private ScheduledExecutorService executorService;
 
     public Client(String host, int port) {
         this.socketConnector = new SocketConnector(host, port);
-        this.executorService = Executors.newScheduledThreadPool(2);
+        this.executorService = Executors.newScheduledThreadPool(THREAD_POOL_SIZE);
     }
 
     public void ping() {
         PingThread pingThread = new PingThread(socketConnector, executorService);
         pingThread.start();
 
-        ScheduledFuture<?> scheduledFuture =
-                executorService.scheduleAtFixedRate(new HeartbeatThread(pingThread), 0, 5, TimeUnit.MINUTES);
-        Runnable exceptionAwareScheduledFuture = () -> {
+        Runnable exceptionTolerantHeartbeat = () -> {
             try {
-                scheduledFuture.get();
-            } catch (InterruptedException e) {
-                LOGGER.error("Scheduled execution was interrupted", e);
-            } catch (CancellationException e) {
-                LOGGER.warn("Heartbeat has been cancelled", e);
-            } catch (ExecutionException e) {
-                if (e.getCause() instanceof ClientRuntimeException) {
-                    LOGGER.error("Client experienced a runtime exception, restarting ping thread", e.getCause().getCause());
-                    restartPingThread();
-                } else {
-                    LOGGER.error("Uncaught exception in scheduled execution, canceling heartbeat", e);
-                    scheduledFuture.cancel(true);
-                }
+                new HeartbeatThread(pingThread).run();
+            } catch (Throwable e) {
+                LOGGER.error("Uncaught exception in scheduled execution, restarting heartbeat", e);
+                restartPingThread();
             }
         };
-        executorService.execute(exceptionAwareScheduledFuture);
+        executorService.scheduleAtFixedRate(exceptionTolerantHeartbeat, 1, 5, TimeUnit.MINUTES);
     }
 
     private void restartPingThread() {
         executorService.shutdown();
-        executorService = Executors.newScheduledThreadPool(2);
+        executorService = Executors.newScheduledThreadPool(THREAD_POOL_SIZE);
         ping();
     }
 }
