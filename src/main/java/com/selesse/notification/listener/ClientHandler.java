@@ -57,6 +57,7 @@ public class ClientHandler implements Runnable {
                 }
                 scheduledFuture.cancel(true);
                 this.isAlive = false;
+                closeSocketIfNecessary();
             }
         };
         executorService.execute(exceptionAwareScheduledFuture);
@@ -71,6 +72,16 @@ public class ClientHandler implements Runnable {
         } catch (IOException e) {
             LOGGER.info("Error trying to send WOL message", e);
             clientOutputStream.release();
+        }
+    }
+
+    private void closeSocketIfNecessary() {
+        try {
+            if (!client.isClosed()) {
+                client.close();
+            }
+        } catch (IOException e) {
+            LOGGER.error("Error trying to garbage collect socket", e);
         }
     }
 }
