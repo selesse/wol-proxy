@@ -7,7 +7,7 @@ import java.net.SocketException;
 
 public class DesktopWakeOnLanService {
     public void sendWakeOnLan() throws SocketException {
-        WolService wolService = new WolService(new WolPacket("aa:aa:aa:aa:aa:ab"));
+        WolService wolService = new WolService(new WolPacket("aa:aa:aa:aa:aa:ac"));
         wolService.sendWakeOnLan(NetworkInterface.getByName("eth0"));
     }
 }
