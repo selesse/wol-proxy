@@ -4,9 +4,6 @@ plugins {
     id 'org.hidetake.ssh' version '2.10.1'
 }
 
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
-
 repositories {
     jcenter()
 }
@@ -75,6 +72,12 @@ task deployProxy {
 
 task deploy {
 
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(8)
+    }
 }
 
 assemble.dependsOn fatJar
