@@ -1,0 +1,26 @@
+deploy {
+    pi {
+        host = 'raspberrypi.local'
+        user = 'pi'
+        identity = new File(System.getProperty("user.home") + "/.ssh/id_rsa")
+    }
+    proxy {
+        host = 'proxy.example.com'
+        user = 'proxy'
+        identity = new File(System.getProperty("user.home") + "/.ssh/id_rsa")
+    }
+}
+
+configuration {
+    server {
+        serverPort = 8888
+        proxyPort = 8080
+    }
+    client {
+        clientPort = 8888
+    }
+    wol {
+        macAddress = "aa:aa:aa:aa"
+        networkInterfaceName = "eth0"
+    }
+}

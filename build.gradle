@@ -30,28 +30,16 @@ task fatJar(type: Jar) {
     with jar
 }
 
-remotes {
-    raspberryPi {
-        host = 'raspberrypi.local'
-        user = 'pi'
-        identity = file(System.getProperty("user.home") + "/.ssh/id_rsa")
-    }
-    raspberryPi2 {
-        host = 'raspberrypi2.local'
-        user = 'pi'
-        identity = file(System.getProperty("user.home") + "/.ssh/id_rsa")
-    }
-    proxyServer {
-        host = 'example.com'
-        user = 'alex'
-        identity = file(System.getProperty("user.home") + "/.ssh/id_rsa")
-    }
+def config = new ConfigSlurper().parse(file("gradle/config.gradle").text)
+if (file("gradle/config.prod.gradle").exists()) {
+    def prodConfig = new ConfigSlurper().parse(file("gradle/config.prod.gradle").text)
+    config = config.merge(prodConfig)
 }
 
 task deployPi {
     doLast {
         ssh.run {
-            session(remotes.raspberryPi2) {
+            session(config.deploy.pi) {
                 put from: fatJar.outputs.files.singleFile, into: '/opt/wol-proxy/'
                 execute "sudo /bin/systemctl restart wol-proxy-client"
             }
@@ -62,7 +50,7 @@ task deployPi {
 task deployProxy {
     doLast {
         ssh.run {
-            session(remotes.proxyServer) {
+            session(config.deploy.proxy) {
                 put from: fatJar.outputs.files.singleFile, into: '/opt/wol-proxy/'
                 execute "sudo /bin/systemctl restart wol-proxy"
             }
