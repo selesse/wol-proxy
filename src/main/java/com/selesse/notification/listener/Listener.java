@@ -8,8 +8,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
 public class Listener {
@@ -21,6 +20,7 @@ public class Listener {
     }
 
     public void listen(int port) {
+        scheduleGarbageCollector();
         ExecutorService executorService = Executors.newFixedThreadPool(8);
 
         try {
@@ -40,9 +40,19 @@ public class Listener {
     }
 
     public void onRequestReceived() {
-        clientHandlers.stream()
-                .filter(ClientHandler::isAlive)
-                .forEach(ClientHandler::sendWolMessage);
+        clientHandlers.stream().filter(ClientHandler::isAlive).forEach(ClientHandler::sendWolMessage);
+    }
+
+    private void scheduleGarbageCollector() {
+        ScheduledExecutorService garbageCollector = Executors.newScheduledThreadPool(2);
+        garbageCollector.scheduleAtFixedRate(this::garbageCollect, 0, 5, TimeUnit.MINUTES);
+    }
+
+    private void garbageCollect() {
+        clientHandlers.stream().filter(x -> !x.isAlive()).forEach(clientHandler -> {
+            LOGGER.info("Garbage collecting dead client {}", clientHandler.getRemoteSocketAddress());
+            clientHandler.shutdown();
+        });
         clientHandlers = clientHandlers.stream().filter(ClientHandler::isAlive).collect(Collectors.toList());
     }
 }

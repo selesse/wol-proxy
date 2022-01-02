@@ -34,6 +34,10 @@ public class ClientHandler implements Runnable {
         return isAlive;
     }
 
+    public SocketAddress getRemoteSocketAddress() {
+        return remoteSocketAddress;
+    }
+
     @Override
     public void run() {
         LOGGER.info("Handling incoming client {}", remoteSocketAddress);
@@ -57,7 +61,7 @@ public class ClientHandler implements Runnable {
                 }
                 scheduledFuture.cancel(true);
                 this.isAlive = false;
-                closeSocketIfNecessary();
+                shutdown();
             }
         };
         executorService.execute(exceptionAwareScheduledFuture);
@@ -83,5 +87,10 @@ public class ClientHandler implements Runnable {
         } catch (IOException e) {
             LOGGER.error("Error trying to garbage collect socket", e);
         }
+    }
+
+    public void shutdown() {
+        closeSocketIfNecessary();
+        executorService.shutdownNow();
     }
 }
