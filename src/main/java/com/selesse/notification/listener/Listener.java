@@ -27,6 +27,8 @@ public class Listener {
             ServerSocket serverSocket = new ServerSocket(port);
             while (true) {
                 Socket client = serverSocket.accept();
+                client.setKeepAlive(true);
+                client.setSoTimeout((int) TimeUnit.SECONDS.toMillis(2));
                 LOGGER.info("Starting new thread");
                 ClientHandler clientHandler = new ClientHandler(client);
                 clientHandlers.add(clientHandler);
