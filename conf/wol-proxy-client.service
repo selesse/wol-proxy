@@ -4,6 +4,7 @@ Description=WOL Proxy Client
 [Service]
 User=pi
 Environment="WOL_LOG=/opt/wol-proxy/log"
+Environment="WOL_MAC_ADDRESS=2c:f0:5d:70:31:1a"
 ExecStart=/usr/bin/java -jar /opt/wol-proxy/wol.jar --client example.com 8888
 SuccessExitStatus=143
 TimeoutStopSec=10
