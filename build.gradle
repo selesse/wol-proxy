@@ -38,8 +38,16 @@ if (file("gradle/config.prod.gradle").exists()) {
 
 task deployPi {
     doLast {
+        ant.copy(file: "conf/wol-proxy-client.service.template", tofile: "conf/wol-proxy-client.service") {
+            filterset() {
+                filter(token: 'MAC_ADDRESS', value: config.configuration.wol.macAddress)
+                filter(token: 'SERVER_HOST', value: config.deploy.proxy.host)
+                filter(token: 'SERVER_PORT', value: config.configuration.server.serverPort)
+            }
+        }
         ssh.run {
             session(config.deploy.pi) {
+                put from: "${project.rootDir}/conf/wol-proxy-client.service", into: '/etc/systemd/system/wol-proxy-client.service'
                 put from: fatJar.outputs.files.singleFile, into: '/opt/wol-proxy/'
                 execute "sudo /bin/systemctl restart wol-proxy-client"
             }
@@ -49,6 +57,12 @@ task deployPi {
 
 task deployProxy {
     doLast {
+        ant.copy(file: "conf/wol-proxy.service.template", tofile: "conf/wol-proxy.service") {
+            filterset() {
+                filter(token: 'SERVER_PORT', value: config.configuration.server.serverPort)
+                filter(token: 'PROXY_PORT', value: config.configuration.server.proxyPort)
+            }
+        }
         ssh.run {
             session(config.deploy.proxy) {
                 put from: fatJar.outputs.files.singleFile, into: '/opt/wol-proxy/'

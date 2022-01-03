@@ -8,3 +8,5 @@ out/
 log/
 
 config.prod.gradle
+
+conf/*.service

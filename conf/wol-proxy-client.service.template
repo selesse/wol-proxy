@@ -1,0 +1,15 @@
+[Unit]
+Description=WOL Proxy Client
+
+[Service]
+User=pi
+Environment=WOL_LOG=/opt/wol-proxy/log
+Environment=WOL_MAC_ADDRESS=@MAC_ADDRESS@
+ExecStart=/usr/bin/java -jar /opt/wol-proxy/wol.jar --client @SERVER_HOST@ @SERVER_PORT@
+SuccessExitStatus=143
+TimeoutStopSec=10
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
