@@ -49,6 +49,8 @@ task deployPi {
         ssh.run {
             session(config.deploy.pi) {
                 put from: "${project.rootDir}/conf/wol-proxy-client.service", into: '/etc/systemd/system/wol-proxy-client.service'
+                execute "sudo /bin/systemctl daemon-reload"
+
                 put from: fatJar.outputs.files.singleFile, into: '/opt/wol-proxy/'
                 execute "sudo /bin/systemctl restart wol-proxy-client"
             }
@@ -67,6 +69,9 @@ task deployProxy {
         }
         ssh.run {
             session(config.deploy.proxy) {
+                put from: "${project.rootDir}/conf/wol-proxy.service", into: '/etc/systemd/system/wol-proxy.service'
+                execute "sudo /bin/systemctl daemon-reload"
+
                 put from: fatJar.outputs.files.singleFile, into: '/opt/wol-proxy/'
                 execute "sudo /bin/systemctl restart wol-proxy"
             }

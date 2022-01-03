@@ -2,6 +2,7 @@ package com.selesse.wol;
 
 import com.selesse.wol.packet.WolPacket;
 import org.junit.Test;
+import org.junit.Ignore;
 
 import java.net.InetAddress;
 import java.net.NetworkInterface;
@@ -13,8 +14,9 @@ import java.util.Optional;
 public class WolServiceTest {
 
     @Test
+    @Ignore
     public void sendingAPacketWorks() throws SocketException {
-        WolPacket wolPacket = new WolPacket("aa:aa:aa:aa:aa:ab");
+        WolPacket wolPacket = new WolPacket("aa:aa:aa:aa:aa:aa");
         WolService wolService = new WolService(wolPacket);
         NetworkInterface networkInterface =
                 Optional.ofNullable(NetworkInterface.getByName("eth0"))
