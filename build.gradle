@@ -38,6 +38,7 @@ if (file("gradle/config.prod.gradle").exists()) {
 
 task deployPi {
     doLast {
+        file("conf/wol-proxy-client.service").delete()
         ant.copy(file: "conf/wol-proxy-client.service.template", tofile: "conf/wol-proxy-client.service") {
             filterset() {
                 filter(token: 'MAC_ADDRESS', value: config.configuration.wol.macAddress)
@@ -57,6 +58,7 @@ task deployPi {
 
 task deployProxy {
     doLast {
+        file("conf/wol-proxy.service").delete()
         ant.copy(file: "conf/wol-proxy.service.template", tofile: "conf/wol-proxy.service") {
             filterset() {
                 filter(token: 'SERVER_PORT', value: config.configuration.server.serverPort)
