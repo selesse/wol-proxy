@@ -1,5 +1,5 @@
 plugins {
-    id 'java'
+    id 'java-library'
     id 'application'
     id 'org.hidetake.ssh' version '2.10.1'
 }
@@ -9,9 +9,9 @@ repositories {
 }
 
 dependencies {
-    compile("org.slf4j:slf4j-api:1.7.30")
-    compile("com.sparkjava:spark-core:2.8.0")
-    compile("ch.qos.logback:logback-classic:1.2.3")
+    api("org.slf4j:slf4j-api:1.7.30")
+    api("com.sparkjava:spark-core:2.8.0")
+    implementation("ch.qos.logback:logback-classic:1.2.3")
     implementation("com.google.guava:guava:28.1-jre")
 
     testImplementation("junit:junit:4.12")
@@ -26,8 +26,9 @@ task fatJar(type: Jar) {
         attributes 'Main-Class': 'com.selesse.wol.App'
     }
     archiveFileName = 'wol.jar'
-    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+    from { configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
     with jar
+    duplicatesStrategy(DuplicatesStrategy.EXCLUDE)
 }
 
 def config = new ConfigSlurper().parse(file("gradle/config.gradle").text)
@@ -85,7 +86,7 @@ task deploy {
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(8)
+        languageVersion = JavaLanguageVersion.of(17)
     }
 }
 
